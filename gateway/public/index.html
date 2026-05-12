@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Stockflow — AI Inventory Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --white: #ffffff;
+  --off-white: #f9f8f6;
+  --gray-50: #f5f4f2;
+  --gray-100: #eeede9;
+  --gray-200: #dddbd5;
+  --gray-300: #c4c1b8;
+  --gray-400: #9e9b92;
+  --gray-500: #6e6b62;
+  --gray-700: #3a3830;
+  --gray-900: #1c1b18;
+  --ink: #0f0e0c;
+  --sage: #4a7c59;
+  --sage-light: #e8f0eb;
+  --sage-mid: #c2d9c9;
+  --amber: #c47d2a;
+  --amber-light: #fdf3e3;
+  --red: #c0392b;
+  --red-light: #fdecea;
+  --blue: #2563b8;
+  --blue-light: #eef3fc;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow: 0 4px 16px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06);
+  --transition: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html { font-size: 15px; }
+
+body {
+  font-family: 'Geist', -apple-system, sans-serif;
+  background: var(--off-white);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── SIDEBAR ────────────────────────────────────── */
+.sidebar {
+  width: 248px;
+  flex-shrink: 0;
+  background: var(--white);
+  border-right: 1px solid var(--gray-100);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+}
+
+.sidebar-top {
+  padding: 28px 20px 20px;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+
+.brand-icon {
+  width: 32px; height: 32px;
+  background: var(--ink);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 15px;
+}
+
+.brand-name {
+  font-family: 'Instrument Serif', serif;
+  font-size: 20px;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+}
+
+.brand-tagline {
+  font-size: 11.5px;
+  color: var(--gray-400);
+  margin-left: 42px;
+  margin-top: -2px;
+}
+
+.nav {
+  padding: 16px 12px;
+  flex: 1;
+}
+
+.nav-section-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray-300);
+  padding: 0 8px;
+  margin: 16px 0 6px;
+}
+
+.nav-section-label:first-child { margin-top: 4px; }
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--gray-500);
+  font-size: 13.5px;
+  font-weight: 400;
+  transition: all var(--transition);
+  user-select: none;
+}
+
+.nav-item:hover { background: var(--gray-50); color: var(--gray-700); }
+
+.nav-item.active {
+  background: var(--sage-light);
+  color: var(--sage);
+  font-weight: 500;
+}
+
+.nav-icon {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+  font-size: 14px;
+  flex-shrink: 0;
+  background: transparent;
+  transition: background var(--transition);
+}
+
+.nav-item.active .nav-icon { background: var(--sage-mid); }
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--gray-100);
+}
+
+.api-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+
+.status-indicator {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--sage);
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px var(--sage-light);
+  animation: breathe 2.5s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { box-shadow: 0 0 0 2px var(--sage-light); }
+  50% { box-shadow: 0 0 0 4px var(--sage-mid); }
+}
+
+.status-text { font-size: 12px; color: var(--gray-500); line-height: 1.3; }
+.status-text strong { color: var(--gray-700); font-weight: 500; display: block; }
+
+/* ── MAIN ────────────────────────────────────────── */
+.main {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+.view { display: none; }
+.view.active {
+  display: block;
+  animation: viewIn 0.22s ease;
+}
+
+@keyframes viewIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 36px 40px 60px;
+}
+
+/* ── PAGE HEADER ─────────────────────────────────── */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.page-eyebrow {
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sage);
+  margin-bottom: 4px;
+}
+
+.page-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 32px;
+  color: var(--ink);
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+}
+
+.page-sub {
+  font-size: 13.5px;
+  color: var(--gray-400);
+  margin-top: 4px;
+}
+
+/* ── BUTTONS ─────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  font-family: 'Geist', sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all var(--transition);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--ink);
+  color: white;
+}
+.btn-primary:hover { background: var(--gray-700); transform: translateY(-1px); box-shadow: var(--shadow); }
+
+.btn-secondary {
+  background: var(--white);
+  color: var(--gray-700);
+  border: 1px solid var(--gray-200);
+}
+.btn-secondary:hover { background: var(--gray-50); border-color: var(--gray-300); }
+
+.btn-sage {
+  background: var(--sage);
+  color: white;
+}
+.btn-sage:hover { background: #3d6b4b; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(74,124,89,0.3); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--gray-500);
+  border: 1px solid transparent;
+  padding: 6px 10px;
+  font-size: 12.5px;
+}
+.btn-ghost:hover { background: var(--gray-50); color: var(--gray-700); border-color: var(--gray-100); }
+
+.btn-danger-ghost {
+  background: transparent;
+  color: var(--red);
+  border: 1px solid transparent;
+  padding: 5px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+.btn-danger-ghost:hover { background: var(--red-light); border-color: #f5c6c2; }
+
+/* ── STAT CARDS ──────────────────────────────────── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.stat-card {
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition);
+}
+
+.stat-card:hover { box-shadow: var(--shadow); }
+
+.stat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray-400);
+  letter-spacing: 0.01em;
+}
+
+.stat-icon {
+  width: 30px; height: 30px;
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+
+.stat-icon.sage { background: var(--sage-light); }
+.stat-icon.amber { background: var(--amber-light); }
+.stat-icon.red { background: var(--red-light); }
+.stat-icon.blue { background: var(--blue-light); }
+
+.stat-value {
+  font-family: 'Instrument Serif', serif;
+  font-size: 30px;
+  color: var(--ink);
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.stat-meta {
+  font-size: 11.5px;
+  color: var(--gray-400);
+  margin-top: 4px;
+}
+
+/* ── PANELS ──────────────────────────────────────── */
+.panel {
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.panel-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+.panel-meta {
+  font-size: 12px;
+  color: var(--gray-400);
+}
+
+.two-col-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* ── TABLE ───────────────────────────────────────── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th {
+  text-align: left;
+  padding: 11px 16px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--gray-400);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.data-table td {
+  padding: 13px 16px;
+  font-size: 13.5px;
+  border-bottom: 1px solid var(--gray-50);
+  color: var(--gray-700);
+}
+
+.data-table tr:last-child td { border-bottom: none; }
+
+.data-table tbody tr {
+  transition: background var(--transition);
+}
+
+.data-table tbody tr:hover td { background: var(--gray-50); }
+
+/* ── BADGES ──────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 99px;
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.badge-sage { background: var(--sage-light); color: var(--sage); }
+.badge-amber { background: var(--amber-light); color: var(--amber); }
+.badge-red { background: var(--red-light); color: var(--red); }
+.badge-blue { background: var(--blue-light); color: var(--blue); }
+.badge-gray { background: var(--gray-100); color: var(--gray-500); }
+
+/* ── SEARCH & FILTERS ────────────────────────────── */
+.filter-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.input-wrap {
+  position: relative;
+  flex: 1;
+}
+
+.input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray-300);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.input {
+  width: 100%;
+  padding: 9px 12px 9px 36px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  font-family: 'Geist', sans-serif;
+  font-size: 13.5px;
+  color: var(--ink);
+  outline: none;
+  transition: all var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+
+.input:focus { border-color: var(--sage); box-shadow: 0 0 0 3px var(--sage-light); }
+
+.select {
+  padding: 9px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  font-family: 'Geist', sans-serif;
+  font-size: 13.5px;
+  color: var(--gray-700);
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+
+.select:focus { border-color: var(--sage); }
+
+/* ── PAGINATION ──────────────────────────────────── */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-top: 1px solid var(--gray-100);
+}
+
+.pagination-info { font-size: 12.5px; color: var(--gray-400); }
+.pagination-btns { display: flex; gap: 4px; }
+
+.pg-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: 6px;
+  background: var(--white);
+  font-family: 'Geist', sans-serif;
+  font-size: 12.5px;
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.pg-btn:hover { border-color: var(--sage); color: var(--sage); }
+.pg-btn.active { background: var(--ink); color: white; border-color: var(--ink); }
+.pg-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ── AI SEARCH ───────────────────────────────────── */
+.search-hero {
+  text-align: center;
+  padding: 20px 0 36px;
+}
+
+.search-hero-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 40px;
+  color: var(--ink);
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+
+.search-hero-title em { font-style: italic; color: var(--sage); }
+
+.search-hero-sub {
+  font-size: 14px;
+  color: var(--gray-400);
+  margin-bottom: 28px;
+}
+
+.search-bar-hero {
+  display: flex;
+  gap: 10px;
+  max-width: 640px;
+  margin: 0 auto 20px;
+}
+
+.search-bar-hero .input {
+  padding: 12px 16px 12px 42px;
+  font-size: 14.5px;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+
+.search-bar-hero .btn { padding: 12px 24px; border-radius: 10px; font-size: 14px; }
+
+.quick-chips {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 5px 14px;
+  border: 1px solid var(--gray-200);
+  border-radius: 99px;
+  font-size: 12.5px;
+  color: var(--gray-500);
+  background: var(--white);
+  cursor: pointer;
+  transition: all var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+
+.chip:hover { border-color: var(--sage); color: var(--sage); background: var(--sage-light); }
+
+.search-meta-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gray-100);
+  margin-bottom: 20px;
+  font-size: 12.5px;
+  color: var(--gray-400);
+}
+
+.search-meta-bar .dot { color: var(--gray-200); }
+
+/* ── PRODUCT CARDS ───────────────────────────────── */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.product-card {
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition);
+  cursor: default;
+}
+
+.product-card:hover {
+  box-shadow: var(--shadow);
+  border-color: var(--gray-200);
+  transform: translateY(-2px);
+}
+
+.product-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.product-sku {
+  font-size: 11px;
+  color: var(--gray-300);
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+
+.product-name {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.35;
+  margin-bottom: 6px;
+}
+
+.product-desc {
+  font-size: 12.5px;
+  color: var(--gray-400);
+  line-height: 1.5;
+  margin-bottom: 16px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.product-card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.product-price {
+  font-family: 'Instrument Serif', serif;
+  font-size: 22px;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+}
+
+.sim-score {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.sim-label { font-size: 10.5px; color: var(--gray-300); }
+
+.sim-bar {
+  width: 56px;
+  height: 3px;
+  background: var(--gray-100);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.sim-fill {
+  height: 100%;
+  background: var(--sage);
+  border-radius: 99px;
+  transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+
+.product-card-footer {
+  display: flex;
+  gap: 6px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--gray-50);
+}
+
+/* ── FORM ────────────────────────────────────────── */
+.form-card {
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius);
+  padding: 32px;
+  box-shadow: var(--shadow-sm);
+  max-width: 600px;
+}
+
+.form-group { margin-bottom: 18px; }
+
+.form-label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--gray-500);
+  margin-bottom: 6px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  font-family: 'Geist', sans-serif;
+  font-size: 13.5px;
+  color: var(--ink);
+  outline: none;
+  transition: all var(--transition);
+}
+
+.form-input:focus { border-color: var(--sage); box-shadow: 0 0 0 3px var(--sage-light); }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+.form-divider {
+  border: none;
+  border-top: 1px solid var(--gray-100);
+  margin: 24px 0;
+}
+
+/* ── CATEGORY CHART ──────────────────────────────── */
+.cat-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--gray-50);
+}
+
+.cat-row:last-child { border-bottom: none; }
+
+.cat-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cat-name { font-size: 13px; color: var(--gray-600); width: 150px; flex-shrink: 0; }
+
+.cat-bar-track {
+  flex: 1;
+  height: 5px;
+  background: var(--gray-100);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.cat-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+
+.cat-count { font-size: 12px; color: var(--gray-400); width: 50px; text-align: right; flex-shrink: 0; }
+
+/* ── SYSTEM STATUS ───────────────────────────────── */
+.status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--gray-50);
+}
+
+.status-row:last-child { border-bottom: none; }
+.status-key { font-size: 13px; color: var(--gray-500); }
+.status-val { font-size: 13px; color: var(--gray-700); font-weight: 500; }
+
+/* ── TOAST ───────────────────────────────────────── */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 9999;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--ink);
+  color: white;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  box-shadow: var(--shadow-lg);
+  animation: toastIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  max-width: 320px;
+}
+
+.toast.success::before { content: '✓'; color: #6bcf89; font-weight: 700; }
+.toast.error { background: var(--red); }
+.toast.error::before { content: '✕'; font-weight: 700; }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── LOADING ─────────────────────────────────────── */
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px;
+  color: var(--gray-400);
+  font-size: 13.5px;
+}
+
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid var(--gray-100);
+  border-top-color: var(--sage);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 32px;
+  text-align: center;
+}
+
+.empty-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.3; }
+.empty-title { font-size: 15px; font-weight: 600; color: var(--gray-500); margin-bottom: 4px; }
+.empty-sub { font-size: 13px; color: var(--gray-300); }
+
+/* ── SKU CELL ────────────────────────────────────── */
+.sku-cell {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: var(--gray-400);
+  background: var(--gray-50);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* ── SCROLLBAR ───────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 99px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-top">
+    <div class="brand">
+      <div class="brand-icon">⬡</div>
+      <div class="brand-name">Stockflow</div>
+    </div>
+    <div class="brand-tagline">AI Inventory Platform</div>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-section-label">Overview</div>
+    <div class="nav-item active" data-view="dashboard" onclick="showView('dashboard', this)">
+      <div class="nav-icon">◫</div> Dashboard
+    </div>
+
+    <div class="nav-section-label">Inventory</div>
+    <div class="nav-item" data-view="products" onclick="showView('products', this)">
+      <div class="nav-icon">▤</div> Products
+    </div>
+    <div class="nav-item" data-view="add" onclick="showView('add', this)">
+      <div class="nav-icon">＋</div> Add Product
+    </div>
+
+    <div class="nav-section-label">Intelligence</div>
+    <div class="nav-item" data-view="search" onclick="showView('search', this)">
+      <div class="nav-icon">◎</div> AI Search
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="api-status">
+      <div class="status-indicator"></div>
+      <div class="status-text">
+        <strong>API Connected</strong>
+        localhost:3000
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+  <!-- ── DASHBOARD ── -->
+  <div class="view active" id="view-dashboard">
+    <div class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow">Overview</div>
+          <div class="page-title">Inventory Dashboard</div>
+          <div class="page-sub">Real-time metrics across your product catalog</div>
+        </div>
+        <button class="btn btn-secondary" onclick="loadDashboard()">
+          <span>↻</span> Refresh
+        </button>
+      </div>
+
+      <div class="stats-row" id="stats-row">
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-label">Total Products</div>
+            <div class="stat-icon sage">📦</div>
+          </div>
+          <div class="stat-value" id="s-total">—</div>
+          <div class="stat-meta">Indexed in FAISS</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-label">Inventory Value</div>
+            <div class="stat-icon amber">💰</div>
+          </div>
+          <div class="stat-value" id="s-value">—</div>
+          <div class="stat-meta">Total stock value</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-label">Low Stock Alerts</div>
+            <div class="stat-icon red">⚠️</div>
+          </div>
+          <div class="stat-value" id="s-low">—</div>
+          <div class="stat-meta">Items below 10 units</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-label">Categories</div>
+            <div class="stat-icon blue">🗂</div>
+          </div>
+          <div class="stat-value" id="s-cats">—</div>
+          <div class="stat-meta">Product categories</div>
+        </div>
+      </div>
+
+      <div class="two-col-panels">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Products by Category</div>
+          </div>
+          <div id="cat-chart"><div class="loading-state"><div class="spinner"></div>Loading...</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">System Status</div>
+            <span class="badge badge-sage">Operational</span>
+          </div>
+          <div id="sys-status"><div class="loading-state"><div class="spinner"></div>Loading...</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PRODUCTS ── -->
+  <div class="view" id="view-products">
+    <div class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow">Inventory</div>
+          <div class="page-title">Products</div>
+          <div class="page-sub" id="products-sub">Loading catalog...</div>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <div class="input-wrap">
+          <span class="input-icon">⌕</span>
+          <input class="input" type="text" id="product-filter" placeholder="Filter by name, SKU…" oninput="filterRows()"/>
+        </div>
+        <select class="select" id="cat-filter" onchange="loadProducts(1)">
+          <option value="">All Categories</option>
+          <option>Electronics</option><option>Clothing</option>
+          <option>Home & Garden</option><option>Sports & Outdoors</option>
+          <option>Books</option><option>Toys & Games</option>
+          <option>Health & Beauty</option><option>Automotive</option>
+          <option>Food & Grocery</option><option>Office Supplies</option>
+        </select>
+      </div>
+
+      <div class="panel">
+        <div id="table-body">
+          <div class="loading-state"><div class="spinner"></div>Loading products…</div>
+        </div>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── AI SEARCH ── -->
+  <div class="view" id="view-search">
+    <div class="page">
+      <div class="search-hero">
+        <div class="page-eyebrow">Semantic Search</div>
+        <div class="search-hero-title">Ask in <em>plain English</em></div>
+        <div class="search-hero-sub">FAISS vector search across 10,000+ products using sentence-transformer embeddings</div>
+
+        <div class="search-bar-hero">
+          <div class="input-wrap">
+            <span class="input-icon">⌕</span>
+            <input class="input" type="search" id="search-input"
+              placeholder="e.g. wireless headphones for the gym…"
+              onkeydown="if(event.key==='Enter') doSearch()"/>
+          </div>
+          <button class="btn btn-sage" onclick="doSearch()">Search</button>
+        </div>
+
+        <div class="quick-chips">
+          <span class="chip" onclick="qs('noise cancelling headphones')">Noise-cancelling headphones</span>
+          <span class="chip" onclick="qs('yoga and meditation gear')">Yoga & meditation</span>
+          <span class="chip" onclick="qs('smart home devices')">Smart home</span>
+          <span class="chip" onclick="qs('software engineering books')">Coding books</span>
+          <span class="chip" onclick="qs('lightweight running shoes')">Running shoes</span>
+        </div>
+      </div>
+
+      <div id="search-results">
+        <div class="empty-state">
+          <div class="empty-icon">◎</div>
+          <div class="empty-title">Start searching</div>
+          <div class="empty-sub">Enter a natural language query above</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ADD PRODUCT ── -->
+  <div class="view" id="view-add">
+    <div class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow">Inventory</div>
+          <div class="page-title">Add Product</div>
+          <div class="page-sub">Create a new item in the catalog</div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-group">
+          <label class="form-label">Product Name *</label>
+          <input class="form-input" id="f-name" type="text" placeholder="e.g. Sony WH-1000XM5 Headphones"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <input class="form-input" id="f-desc" type="text" placeholder="Brief product description"/>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">SKU *</label>
+            <input class="form-input" id="f-sku" type="text" placeholder="SKU-XXXXXX"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select class="form-input" id="f-cat">
+              <option>Electronics</option><option>Clothing</option>
+              <option>Home & Garden</option><option>Sports & Outdoors</option>
+              <option>Books</option><option>Toys & Games</option>
+              <option>Health & Beauty</option><option>Automotive</option>
+              <option>Food & Grocery</option><option>Office Supplies</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Price (USD) *</label>
+            <input class="form-input" id="f-price" type="number" step="0.01" placeholder="99.99"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Stock Quantity *</label>
+            <input class="form-input" id="f-stock" type="number" placeholder="100"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tags <span style="color:var(--gray-300);font-weight:400">(comma separated)</span></label>
+          <input class="form-input" id="f-tags" type="text" placeholder="new, popular, sale"/>
+        </div>
+        <hr class="form-divider"/>
+        <button class="btn btn-primary" onclick="addProduct()" style="width:100%;justify-content:center;padding:11px;">
+          Add to Inventory
+        </button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast-container" id="toasts"></div>
+
+<script>
+const API = 'http://localhost:3000';
+let currentPage = 1;
+
+// ── Navigation ──────────────────────────────────────────────────
+function showView(name, el) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  if (el) el.classList.add('active');
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'products') loadProducts(1);
+}
+
+// ── Toast ───────────────────────────────────────────────────────
+function toast(msg, type = 'success') {
+  const c = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+// ── Dashboard ───────────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const r = await fetch(`${API}/api/stats`);
+    const d = await r.json();
+
+    document.getElementById('s-total').textContent = Number(d.total_products).toLocaleString();
+    document.getElementById('s-value').textContent = '$' + (d.total_inventory_value / 1000000).toFixed(2) + 'M';
+    document.getElementById('s-low').textContent = Number(d.low_stock_alerts).toLocaleString();
+    document.getElementById('s-cats').textContent = d.categories?.length || 0;
+
+    const dotColors = ['#4a7c59','#c47d2a','#2563b8','#9b59b6','#e67e22','#e91e63','#00bcd4','#8bc34a','#ff5722','#607d8b'];
+    const maxC = Math.max(...d.categories.map(c => +c.count));
+
+    document.getElementById('cat-chart').innerHTML = d.categories.map((c, i) => `
+      <div class="cat-row">
+        <div class="cat-dot" style="background:${dotColors[i % dotColors.length]}"></div>
+        <div class="cat-name" style="color:var(--gray-600);font-size:13px">${c.category}</div>
+        <div class="cat-bar-track">
+          <div class="cat-bar-fill" style="width:${(+c.count/maxC*100).toFixed(1)}%;background:${dotColors[i % dotColors.length]}22;border:1px solid ${dotColors[i % dotColors.length]}44"></div>
+        </div>
+        <div class="cat-count">${Number(c.count).toLocaleString()}</div>
+      </div>
+    `).join('');
+
+    const si = d.search_index || {};
+    const ci = d.cache || {};
+    document.getElementById('sys-status').innerHTML = `
+      <div class="status-row"><span class="status-key">Search Model</span><span class="status-val">${si.model || 'all-MiniLM-L6-v2'}</span></div>
+      <div class="status-row"><span class="status-key">Index Type</span><span class="status-val">${si.index_type || 'FAISS-IVF'}</span></div>
+      <div class="status-row"><span class="status-key">Indexed Vectors</span><span class="status-val">${Number(si.total_indexed || 0).toLocaleString()}</span></div>
+      <div class="status-row"><span class="status-key">Embedding Dim</span><span class="status-val">${si.embedding_dim || 384}</span></div>
+      <div class="status-row"><span class="status-key">Cache Backend</span><span class="status-val">${ci.backend || 'Redis'}</span></div>
+      <div class="status-row"><span class="status-key">Cache Status</span><span class="status-val"><span class="badge badge-sage">${ci.status || 'Active'}</span></span></div>
+    `;
+  } catch(e) {
+    toast('Could not reach API — is Docker running?', 'error');
+  }
+}
+
+// ── Products ────────────────────────────────────────────────────
+async function loadProducts(page = 1) {
+  currentPage = page;
+  const cat = document.getElementById('cat-filter')?.value || '';
+  document.getElementById('table-body').innerHTML = '<div class="loading-state"><div class="spinner"></div>Loading…</div>';
+
+  try {
+    const r = await fetch(`${API}/api/products?page=${page}&limit=20${cat ? '&category=' + encodeURIComponent(cat) : ''}`);
+    const d = await r.json();
+
+    document.getElementById('products-sub').textContent =
+      `${Number(d.total).toLocaleString()} products · ${d.db_latency_ms}ms · Cache: ${d.cache}`;
+
+    if (!d.data?.length) {
+      document.getElementById('table-body').innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-title">No products found</div></div>';
+      return;
+    }
+
+    document.getElementById('table-body').innerHTML = `
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>SKU</th><th>Name</th><th>Category</th>
+            <th>Price</th><th>Stock</th><th>Tags</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${d.data.map(p => `
+            <tr>
+              <td><span class="sku-cell">${p.sku}</span></td>
+              <td style="font-weight:500;max-width:200px;color:var(--ink)">${p.name}</td>
+              <td><span class="badge badge-blue">${p.category}</span></td>
+              <td style="font-family:'Instrument Serif',serif;font-size:16px;color:var(--ink)">$${parseFloat(p.price).toFixed(2)}</td>
+              <td>
+                <span class="badge ${p.stock_quantity < 10 ? 'badge-red' : p.stock_quantity < 50 ? 'badge-amber' : 'badge-sage'}">
+                  ${p.stock_quantity}
+                </span>
+              </td>
+              <td style="font-size:12px;color:var(--gray-400)">${parseTags(p.tags).join(', ') || '—'}</td>
+              <td><button class="btn-danger-ghost" onclick="delProduct(${p.id},'${p.name.replace(/'/g,"\\'")}')">Delete</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+
+    renderPagination(page, d.total, 20);
+  } catch(e) {
+    document.getElementById('table-body').innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Failed to load</div><div class="empty-sub">Is Docker running?</div></div>';
+  }
+}
+
+function parseTags(tags) {
+  if (!tags) return [];
+  if (Array.isArray(tags)) return tags;
+  try { return JSON.parse(tags); } catch { return []; }
+}
+
+function filterRows() {
+  const q = document.getElementById('product-filter').value.toLowerCase();
+  document.querySelectorAll('.data-table tbody tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+function renderPagination(page, total, limit) {
+  const pages = Math.ceil(total / limit);
+  const s = Math.max(1, page - 2), e = Math.min(pages, page + 2);
+  let html = `<span class="pagination-info">Page ${page} of ${pages.toLocaleString()} · ${Number(total).toLocaleString()} total</span><div class="pagination-btns">`;
+  html += `<button class="pg-btn" onclick="loadProducts(${page - 1})" ${page===1?'disabled':''}>← Prev</button>`;
+  for (let i = s; i <= e; i++) html += `<button class="pg-btn ${i===page?'active':''}" onclick="loadProducts(${i})">${i}</button>`;
+  html += `<button class="pg-btn" onclick="loadProducts(${page + 1})" ${page===pages?'disabled':''}>Next →</button></div>`;
+  document.getElementById('pagination').innerHTML = html;
+}
+
+async function delProduct(id, name) {
+  if (!confirm(`Delete "${name}"?`)) return;
+  const r = await fetch(`${API}/api/products/${id}`, { method: 'DELETE' });
+  if (r.status === 204) { toast(`Deleted: ${name}`); loadProducts(currentPage); }
+  else toast('Delete failed', 'error');
+}
+
+// ── AI Search ───────────────────────────────────────────────────
+async function doSearch() {
+  const q = document.getElementById('search-input').value.trim();
+  if (!q) return;
+
+  document.getElementById('search-results').innerHTML = '<div class="loading-state"><div class="spinner"></div>Searching with AI…</div>';
+
+  try {
+    const r = await fetch(`${API}/api/search?q=${encodeURIComponent(q)}&top_k=12`);
+    const d = await r.json();
+
+    if (!d.results?.length) {
+      document.getElementById('search-results').innerHTML = '<div class="empty-state"><div class="empty-icon">◎</div><div class="empty-title">No results found</div><div class="empty-sub">Try a different query</div></div>';
+      return;
+    }
+
+    document.getElementById('search-results').innerHTML = `
+      <div class="search-meta-bar">
+        <span>${d.total_found} results</span>
+        <span class="dot">·</span>
+        <span>${d.search_latency_ms}ms</span>
+        <span class="dot">·</span>
+        <span>${d.model}</span>
+        <span class="dot">·</span>
+        <span>Cache: ${d.cache}</span>
+      </div>
+      <div class="products-grid">
+        ${d.results.map(p => `
+          <div class="product-card">
+            <div class="product-card-top">
+              <span class="product-sku">${p.sku}</span>
+              <span class="badge badge-blue" style="font-size:11px">${p.category}</span>
+            </div>
+            <div class="product-name">${p.name}</div>
+            <div class="product-desc">${p.description}</div>
+            <div class="product-card-bottom">
+              <div class="product-price">$${parseFloat(p.price).toFixed(2)}</div>
+              <div class="sim-score">
+                <div class="sim-label">Match</div>
+                <div class="sim-bar"><div class="sim-fill" style="width:${(p.similarity_score * 100).toFixed(0)}%"></div></div>
+                <div class="sim-label">${(p.similarity_score * 100).toFixed(0)}%</div>
+              </div>
+            </div>
+            <div class="product-card-footer">
+              <span class="badge ${p.stock_quantity < 10 ? 'badge-red' : 'badge-sage'}">${p.stock_quantity < 10 ? 'Low stock' : p.stock_quantity + ' in stock'}</span>
+              ${parseTags(p.tags).map(t => `<span class="badge badge-gray">${t}</span>`).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } catch(e) {
+    document.getElementById('search-results').innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Search failed</div><div class="empty-sub">Is the API running?</div></div>';
+  }
+}
+
+function qs(q) {
+  document.getElementById('search-input').value = q;
+  doSearch();
+}
+
+// ── Add Product ─────────────────────────────────────────────────
+async function addProduct() {
+  const name = document.getElementById('f-name').value.trim();
+  const sku  = document.getElementById('f-sku').value.trim();
+  const price = parseFloat(document.getElementById('f-price').value);
+  const stock = parseInt(document.getElementById('f-stock').value);
+
+  if (!name || !sku || !price || !stock) { toast('Please fill in all required fields', 'error'); return; }
+
+  const body = {
+    name, sku,
+    description: document.getElementById('f-desc').value.trim(),
+    category: document.getElementById('f-cat').value,
+    price, stock_quantity: stock,
+    tags: document.getElementById('f-tags').value.split(',').map(t => t.trim()).filter(Boolean)
+  };
+
+  try {
+    const r = await fetch(`${API}/api/products`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    if (r.status === 201) {
+      toast(`"${name}" added to inventory`);
+      ['f-name','f-desc','f-sku','f-price','f-stock','f-tags'].forEach(id => document.getElementById(id).value = '');
+    } else {
+      const err = await r.json();
+      toast(err.detail || 'Failed to add product', 'error');
+    }
+  } catch { toast('Request failed', 'error'); }
+}
+
+// ── Init ────────────────────────────────────────────────────────
+loadDashboard();
+</script>
+</body>
+</html>
