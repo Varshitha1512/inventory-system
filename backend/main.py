@@ -19,6 +19,8 @@ from pydantic import BaseModel
 from search_engine import SemanticSearchEngine
 from cache import CacheManager
 from database import DatabaseManager
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -184,3 +186,7 @@ async def get_stats():
     response = serialize({**stats, "search_index": index_info, "cache": {**cache_info, "status": "MISS"}})
     await app.state.cache.set(cache_key, response, ttl=30)
     return JSONResponse(content=response)
+
+@app.get("/")
+async def serve_ui():
+    return FileResponse("static/index.html")
